@@ -1,0 +1,43 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: calico-cni
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/manifest-generate-paths: gitops/argocd/helm/addons/calico-cni
+  labels: #change the names accordingly
+    app.kubernetes.io/name: calico-cni
+    app.kubernetes.io/instance: calico-cni-argocd-app
+    app.kubernetes.io/component: calico-cni
+    app.kubernetes.io/part-of: calico-cni
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tigera-operator
+  project: dframe-aws-env
+  source:
+    path: gitops/argocd/helm/addons/calico-cni
+    repoURL: https://gitlab.cloudifyops.com/devops_framework/dframe_k8s.git
+    targetRevision: feature/main/dframe-425
+    helm:
+      valueFiles:
+        - calico-values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+    - CreateNamespace=true
+    - Validate=false
+    - SkipDryRunOnMissingResource=true
+    - ApplyOutOfSyncOnly=true
+    - ServerSideApply=true
+    # retry:
+    #   limit: 5
+    #   backoff:
+    #     duration: 5s
+    #     factor: 2
+    #     maxDuration: 3m0s
